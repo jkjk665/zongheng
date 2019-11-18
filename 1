@@ -1,0 +1,60 @@
+import xlwt
+import requests
+from lxml import etree
+import time
+
+# 初始化列表,存入爬虫数据
+all_info_list = []
+
+
+def get_info(url):
+    html = requests.get(url)
+    selector = etree.HTML(html.text)
+
+    # 定位大标签,依次循环,获取每一页的每部小说的详情链接url
+    infos = selector.xpath('/html/body/div[2]/em/div[1]/div[1]')
+    # 遍历链接,获取每篇小说的详细信息
+    for info in infos:
+        # 标题
+        title = info.xpath('div/div[2]/div[2]/a[1]/text()')[0]
+        # 作者
+        author = info.xpath('div/div[2]/div[1]/a/text()')[0]
+        info_list = [title, author]
+        # 把数据存入列表
+        all_info_list.append(info_list)
+
+    # 设置休眠时间
+    time.sleep(1)
+
+
+# 程序主入口
+if __name__ == '__main__':
+    url = ['http://book.zongheng.com/store.html']
+    get_info(url)
+    time.sleep(5)
+    #  定义表头
+    header = ['title', 'author']
+    #  创建工作簿
+    book = xlwt.Workbook(encoding='utf_8')
+    #  创建工作表
+    sheet = book.add_sheet('Sheet')
+
+    #  python range() 函数可创建一个整数列表，一般用在 for 循环中。
+    #  Python len() 方法返回对象（字符、列表、元组等）长度或项目个数。
+    for h in range(len(header)):
+        #   写入表头
+        sheet.write(0, h, header[h])
+
+    i = 1
+    #  通过循环遍历,把数据存放入xls表格中
+    for list in all_info_list:
+        j = 0
+        for data in list:
+            sheet.write(i, j, data)
+            # 查看结果
+            print(data)
+
+            j += 1
+        i += 1
+    #  数据存储完毕,把工作簿保存到本地路径
+    book.save('zhonghengxiaoshuo.xls')
